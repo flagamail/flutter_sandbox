@@ -1,4 +1,6 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 void main() {
   runApp(const MyApp());
@@ -59,6 +61,19 @@ class _MyHomePageState extends State<MyHomePage> {
       // called again, and so nothing would appear to happen.
       _counter++;
     });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    // TODO: implement initState
+
+    const scheme = String.fromEnvironment('scheme', defaultValue: 'SOME_DEFAULT_VALUE');
+    const API_URL = String.fromEnvironment('API_URL', defaultValue: 'OTHER_DEFAULT_VALUE');
+
+    print(scheme);
+    print(API_URL);
+
   }
 
   @override
