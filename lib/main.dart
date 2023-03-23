@@ -49,6 +49,7 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   int _counter = 0;
+  double doubleHeight = 0;
 
   void _incrementCounter() {
     setState(() {
@@ -71,39 +72,70 @@ class _MyHomePageState extends State<MyHomePage> {
     // than having to individually change instances of widgets.
     return Scaffold(
       appBar: AppBar(
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
-      ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Invoke "debug painting" (press "p" in the console, choose the
-          // "Toggle Debug Paint" action from the Flutter Inspector in Android
-          // Studio, or the "Toggle Debug Paint" command in Visual Studio Code)
-          // to see the wireframe for each widget.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text(
-              'You have pushed the button this many times:',
+          // Here we take the value from the MyHomePage object that was created by
+          // the App.build method, and use it to set our appbar title.
+          //  title: Text(widget.title),
+          ),
+      body: Stack(
+        children: [
+          SingleChildScrollView(
+            child: Column(
+              children: [
+                Container(
+                  width: double.infinity,
+                  height: 500,
+                  color: Colors.blue,
+                ),
+                Container(
+                  width: double.infinity,
+                  height: 600,
+                  color: Colors.green,
+                ),
+                Container(
+                  width: double.infinity,
+                  height: 700,
+                  color: Colors.orange,
+                ),
+                Container(
+                  width: double.infinity,
+                  height: doubleHeight,
+                  color: Colors.limeAccent,
+                ),
+              ],
             ),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
+          ),
+          Align(
+            alignment: Alignment.bottomCenter,
+            child: FittedBox(
+              fit: BoxFit.cover,
+              child: Builder(builder: (context) {
+                WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+                  final doubleHeightRendered = (context.findRenderObject() as RenderBox).size
+                      .height;
+                  if (doubleHeight != doubleHeightRendered) {
+                    setState(() {
+                      doubleHeight = doubleHeight;
+                      debugPrint('height $doubleHeight');
+                    });
+                  }
+                });
+                return Container(
+                  width: MediaQuery.of(context).size.width,
+                  color: Colors.transparent.withOpacity(0.1),
+                  padding: const EdgeInsets.all(8),
+                  child: const Text(
+                    "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.",
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                );
+              }),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: _incrementCounter,
