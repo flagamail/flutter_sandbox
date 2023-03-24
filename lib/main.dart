@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 
 void main() {
   runApp(const MyApp());
@@ -47,9 +48,41 @@ class MyHomePage extends StatefulWidget {
   State<MyHomePage> createState() => _MyHomePageState();
 }
 
+class Item {
+  double height = 1;
+  Color color = const Color.fromARGB(255, 100, 0, 0);
+  String str = "";
+  GlobalKey gk = GlobalKey();
+}
+
 class _MyHomePageState extends State<MyHomePage> {
   int _counter = 0;
-  double doubleHeight = 0;
+  double doubleHeight = 1;
+  List<Item> listDouble = List.generate(
+      3,
+      (index) => Item()
+        ..height = (index + 1)
+        ..color = Color.fromARGB(255, (index + 1) * 100, 0, 0));
+
+  static const data = "Lorem Ipsum is simply dummy text of the printing and typesetting industry."
+      " Lorem"
+      " Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.";
+  List<String> splitList = [];
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+
+    splitList = data.split(" ");
+    var length2 = splitList.length;
+    listDouble = List.generate(
+        length2,
+        (index) => Item()
+          ..height = (index + 1)
+          ..color = Color.fromARGB(255, (index + 1) * 100, 0, 0)
+          ..str = data.substring(0, data.indexOf(splitList[index])));
+  }
 
   void _incrementCounter() {
     setState(() {
@@ -76,63 +109,99 @@ class _MyHomePageState extends State<MyHomePage> {
           // the App.build method, and use it to set our appbar title.
           //  title: Text(widget.title),
           ),
-      body: Stack(
-        children: [
-          SingleChildScrollView(
-            child: Column(
-              children: [
-                Container(
-                  width: double.infinity,
-                  height: 500,
-                  color: Colors.blue,
-                ),
-                Container(
-                  width: double.infinity,
-                  height: 600,
-                  color: Colors.green,
-                ),
-                Container(
-                  width: double.infinity,
-                  height: 700,
-                  color: Colors.orange,
-                  margin: EdgeInsets.only(bottom: doubleHeight),
-                ),
-              ],
-            ),
-          ),
-          Align(
-            alignment: Alignment.bottomCenter,
-            child: FittedBox(
-              fit: BoxFit.cover,
-              child: Builder(builder: (context) {
-                WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-                  final doubleHeightRendered = (context.findRenderObject() as RenderBox).size
-                      .height;
-                  if (doubleHeight != doubleHeightRendered) {
-                    setState(() {
-                      doubleHeight = doubleHeight;
-                      debugPrint('height $doubleHeight');
-                    });
-                  }
-                });
-                return Container(
-                  width: MediaQuery.of(context).size.width,
-                  color: Colors.grey,
-                  padding: const EdgeInsets.all(8),
-                  child: const Text(
-                    "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.",
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
+      body: LayoutBuilder(builder: (context, constraints) {
+        debugPrint('constraints ${constraints.maxHeight}');
+        return Stack(
+          children: [
+            SingleChildScrollView(
+              child: Column(
+                children: [
+                  Container(
+                    width: double.infinity,
+                    height: 500,
+                    color: Colors.blue,
+                  ),
+                  Container(
+                    width: double.infinity,
+                    height: 600,
+                    color: Colors.green,
+                  ),
+                  Container(
+                    width: double.infinity,
+                    height: 700,
+                    color: Colors.orange,
+                    margin: EdgeInsets.only(bottom: doubleHeight),
+                    alignment: Alignment.bottomCenter,
+                    child: const Text(
+                      'Hi',
+                      textAlign: TextAlign.end,
+                      style: TextStyle(fontSize: 20),
                     ),
                   ),
-                );
-              }),
+                ],
+              ),
             ),
-          ),
-        ],
-      ),
+            Align(
+              alignment: Alignment.bottomCenter,
+              child: SizedBox(
+                width: MediaQuery.of(context).size.width,
+                height: doubleHeight,
+                child: PageView.builder(
+                  itemCount: splitList.length,
+                  controller: PageController(),
+                  itemBuilder: (context, index) {
+                    debugPrint('Itembuilder $index $doubleHeight');
+
+                    return Container(
+                      color: listDouble[index].color,
+                      child: SingleChildScrollView(
+                        /// Additional Builder to get context closer to Child i.e., Text
+                        /// This enables to find renderObject - Constrained Box of Container
+                        child: RepaintBoundary(
+                          key: listDouble[index].gk,
+                          child: LayoutBuilder(
+                              builder: (BuildContext context, BoxConstraints constraints) {
+                            WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+                              final RenderBox renderBox = listDouble[index]
+                                  .gk
+                                  .currentContext
+                                  ?.findRenderObject() as RenderBox;
+                              final double doubleHeightRendered = renderBox.size.height * 2;
+                              debugPrint("doubleHeightRendered $doubleHeightRendered");
+
+
+                              if (listDouble[index].height != doubleHeightRendered) {
+                                setState(() {
+                                  listDouble[index].height = doubleHeightRendered;
+                                  doubleHeight = doubleHeightRendered;
+                                  debugPrint('height ${listDouble[index].height}');
+                                });
+                              }
+                            });
+
+                            return Text(
+                              listDouble[index].str,
+                              style: const TextStyle(fontSize: 20),
+                            );
+                          }),
+                        ),
+                      ),
+                    );
+                  },
+                  onPageChanged: (index) {
+                    if (doubleHeight != listDouble[index].height) {
+                      setState(() {
+                        debugPrint("onPageChanged $index");
+                        doubleHeight = listDouble[index].height;
+                      });
+                    }
+                  },
+                ),
+              ),
+            ),
+          ],
+        );
+      }),
       floatingActionButton: FloatingActionButton(
         onPressed: _incrementCounter,
         tooltip: 'Increment',
