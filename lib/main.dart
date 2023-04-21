@@ -47,6 +47,7 @@ class _ChatAppConversationViewState extends State<ChatAppConversationView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.grey,
       body: Center(
         child: SizedBox(
           width: 220,
@@ -54,23 +55,20 @@ class _ChatAppConversationViewState extends State<ChatAppConversationView> {
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
               (_controller.text != '')
-                  ? Align(
-                alignment: Alignment.centerRight,
-                child: Container(
-                  color: Colors.blue[100]!,
-                  padding: const EdgeInsets.all(15),
-                  child: AnimatedBuilder(
-                    animation: _controller,
-                    builder: (context, widget) {
-                      return TimestampedChatMessage(
-                        text: _controller.text,
-                        sentAt: sentAt,
-                        style: const TextStyle(color: Colors.red),
-                      );
-                    },
-                  ),
-                ),
-              )
+                  ? Container(
+                    color: Colors.blue[100]!,
+                    padding: const EdgeInsets.all(15),
+                    child: AnimatedBuilder(
+                      animation: _controller,
+                      builder: (context, _) {
+                        return TimestampedChatMessage(
+                          text: _controller.text,
+                          sentAt: sentAt,
+                          style: const TextStyle(color: Colors.red),
+                        );
+                      },
+                    ),
+                  )
                   : Container(),
               const SizedBox(height: 50),
               Padding(
