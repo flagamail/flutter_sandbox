@@ -2,6 +2,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 
+import 'dart:math' as math;
+
 void main() => runApp(const MyApp());
 
 class MyApp extends StatelessWidget {
@@ -27,29 +29,46 @@ class HomePage extends StatelessWidget {
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: <Widget>[
-              const Text('This is testing the Gap widget'),
-              const Gap(30),
-              const Text(
-                  'Notice the gap between me and the text above me, its vertical'),
-              const Gap(30),
-              const Text('Now lets look at it working horizontally'),
-              const Gap(16),
-              Row(
-                children: const [
-                  Text('First Text inside the Row'),
-                  Gap(16),
-                  Text(
-                    'Second Text inside Row',
-                    maxLines: 3,
-                  ),
-                ],
-              ),
-            ],
-          ),
+          child: LayoutBuilder(builder: (context, constraints) {
+            debugPrint('LayoutBuilder $constraints');
+            return ListView(
+              //  crossAxisAlignment: CrossAxisAlignment.start,
+              //  mainAxisAlignment: MainAxisAlignment.center,
+              //  mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                //    const Text('This is testing the Gap widget'),
+                Column(
+                  children: const [
+                     Gap(3000),
+                  ],
+                ),
+                //    const Text('Notice the gap between me and the text above me, its vertical'),
+                //  const Gap(30),
+                //     const Text('Now lets look at it working horizontally'),
+                LayoutBuilder(builder: (context, constraints) {
+                  debugPrint('Inner LayoutBuilder $constraints');
+                  return const SizedBox(height: 10);
+                }),
+              //  const Gap(16),
+                Column(
+                  children: [
+                    Flexible(
+                      child: Row(
+                        children: const [
+                          Text('First Text inside the Row'),
+                          Gap(12),
+                          Text(
+                            'Second Text inside Row',
+                            maxLines: 3,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            );
+          }),
         ),
       ),
     );
@@ -58,9 +77,9 @@ class HomePage extends StatelessWidget {
 
 class Gap extends LeafRenderObjectWidget {
   const Gap(
-      this.mainAxisExtent, {
-        Key? key,
-      })  : assert(mainAxisExtent >= 0 && mainAxisExtent < double.infinity),
+    this.mainAxisExtent, {
+    Key? key,
+  })  : assert(mainAxisExtent >= 0 && mainAxisExtent < double.infinity),
         super(key: key);
 
   final double mainAxisExtent;
@@ -83,6 +102,7 @@ class _RenderGap extends RenderBox {
 
   double get mainAxisExtent => _mainAxisExtent;
   double _mainAxisExtent;
+
   set mainAxisExtent(double value) {
     if (_mainAxisExtent != value) {
       _mainAxisExtent = value;
@@ -94,6 +114,7 @@ class _RenderGap extends RenderBox {
   void performLayout() {
     final AbstractNode flex = parent!;
     if (flex is RenderFlex) {
+      debugPrint('Gap $constraints mainaxisExtent $mainAxisExtent');
       if (flex.direction == Axis.horizontal) {
         size = constraints.constrain(Size(mainAxisExtent, 0));
       } else {
@@ -104,5 +125,13 @@ class _RenderGap extends RenderBox {
         'A Gap widget must be placed directly inside a Flex widget',
       );
     }
+  }
+
+  @override
+  void paint(PaintingContext context, Offset offset) {
+    // TODO: implement paint
+    super.paint(context, offset);
+    debugPrint('Paint context $context PaintOffset $offset');
+    debugPrint('Paint hasSize $hasSize  ${hasSize ? size : 'No Size'}');
   }
 }
