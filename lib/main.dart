@@ -1,212 +1,252 @@
-import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
+// Copyright 2013 The Flutter Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
 
-void main() {
-  runApp(const MyApp());
+import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+
+// This scenario demonstrates how to use redirect to handle a sign-in flow.
+//
+// The GoRouter.redirect method is called before the app is navigate to a
+// new page. You can choose to redirect to a different page by returning a
+// non-null URL string.
+
+/// Family data class.
+class Family {
+  /// Create a family.
+  const Family({required this.name, required this.people});
+
+  /// The last name of the family.
+  final String name;
+
+  /// The people in the family.
+  final Map<String, Person> people;
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+/// Person data class.
+class Person {
+  /// Creates a person.
+  const Person({required this.name, required this.age});
 
-  // This widget is the root of your application.
+  /// The first name of the person.
+  final String name;
+
+  /// The age of the person.
+  final int age;
+}
+
+const Map<String, Family> _families = <String, Family>{
+  'f1': Family(
+    name: 'Doe',
+    people: <String, Person>{
+      'p1': Person(name: 'Jane', age: 23),
+      'p2': Person(name: 'John', age: 6),
+    },
+  ),
+  'f2': Family(
+    name: 'Wong',
+    people: <String, Person>{
+      'p1': Person(name: 'June', age: 51),
+      'p2': Person(name: 'Xin', age: 44),
+    },
+  ),
+};
+
+/// The login information.
+class LoginInfo extends ChangeNotifier {
+  /// The username of login.
+  String get userName => _userName;
+  String _userName = '';
+
+  /// Whether a user has logged in.
+  bool get loggedIn => _userName.isNotEmpty;
+
+  /// Logs in a user.
+  void login(String userName) {
+    _userName = userName;
+    notifyListeners();
+  }
+
+  /// Logs out the current user.
+  void logout() {
+    _userName = '';
+    notifyListeners();
+  }
+}
+
+void main() {
+  Get.put(LoginInfo());
+  runApp(App());
+}
+
+class AuthMiddleware extends GetMiddleware {
+  @override
+  RouteSettings? redirect(String? route) {
+    return Get.find<LoginInfo>().loggedIn ? null : const RouteSettings(name: '/login');
+  }
+}
+
+class LoginMiddleware extends GetMiddleware {
+  @override
+  RouteSettings? redirect(String? route) {
+    return Get.find<LoginInfo>().loggedIn ? const RouteSettings(name: '/home') : null;
+  }
+}
+
+/// The main app.
+class App extends StatelessWidget {
+  /// Creates an [App].
+  App({super.key});
+
+  /// The title of the app.
+  static const String title = 'GoRouter Example: Redirection';
+
+  // add the login info into the tree as app state that can change over time
+  @override
+  Widget build(BuildContext context) => GetMaterialApp(
+        title: title,
+        debugShowCheckedModeBanner: false,
+        initialRoute: '/login',
+        getPages: [
+          GetPage(
+              name: '/login',
+              page: () => const LoginScreen(),
+              transition: Transition.rightToLeft,
+              middlewares: [LoginMiddleware()]),
+          GetPage(
+              name: '/home',
+              page: () => const HomeScreen(),
+              transition: Transition.rightToLeft,
+              middlewares: [
+                AuthMiddleware()
+              ],
+              children: [
+                GetPage(
+                  name: '/',
+                  page: () => const HomeScreen(),
+
+             //     middlewares: [AuthMiddleware()],
+                ),
+                GetPage(
+                  name: '/:fid',
+                  page: () => FamilyScreen(),
+                ),
+              ]),
+        ],
+      );
+}
+
+/// The login screen.
+class LoginScreen extends StatelessWidget {
+  /// Creates a [LoginScreen].
+  const LoginScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+        appBar: AppBar(title: const Text(App.title)),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              ElevatedButton(
+                onPressed: () {
+                  // log a user in, letting all the listeners know
+                  Get.find<LoginInfo>().login('test-user');
+
+                  Get.offAllNamed('/home', predicate: (_) => false);
+                  // router will automatically redirect from /login to / using
+                  // refreshListenable
+                },
+                child: const Text('Login'),
+              ),
+            ],
+          ),
+        ),
+      );
+}
+
+/// The home screen.
+class HomeScreen extends StatelessWidget {
+  /// Creates a [HomeScreen].
+  const HomeScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // Try running your application with "flutter run". You'll see the
-        // application has a blue toolbar. Then, without quitting the app, try
-        // changing the primarySwatch below to Colors.green and then invoke
-        // "hot reload" (press "r" in the console where you ran "flutter run",
-        // or simply save your changes to "hot reload" in a Flutter IDE).
-        // Notice that the counter didn't reset back to zero; the application
-        // is not restarted.
-        primarySwatch: Colors.blue,
+    // final LoginInfo info = context.read<LoginInfo>();
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text(App.title),
+        actions: <Widget>[
+          IconButton(
+            onPressed: Get.find<LoginInfo>().logout,
+            tooltip: 'Logout: ${Get.find<LoginInfo>().userName}',
+            icon: const Icon(Icons.logout),
+          )
+        ],
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      body: ListView(
+        children: <Widget>[
+          for (final MapEntry<String, Family> entry in _families.entries)
+            ListTile(
+              title: Text(entry.value.name),
+              onTap: () => Get.toNamed('/home/${entry.key}'),
+            )
+        ],
+      ),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
-  final String title;
-
-  @override
-  State<MyHomePage> createState() => _MyHomePageState();
-}
-
-class Item {
-  double height = 1;
-  Color color = const Color.fromARGB(255, 100, 0, 0);
-  String str = "";
-  GlobalKey gk = GlobalKey();
-}
-
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
-  double doubleHeight = 1;
-  List<Item> listDouble = List.generate(
-      3,
-      (index) => Item()
-        ..height = (index + 1)
-        ..color = Color.fromARGB(255, (index + 1) * 100, 0, 0));
-
-  static const data = "Lorem Ipsum is simply dummy text of the printing and typesetting industry."
-      " Lorem"
-      " Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.";
-  List<String> splitList = [];
-
-  @override
-  void initState() {
-    // TODO: implement initState
-    super.initState();
-
-    splitList = data.split(" ");
-    var length2 = splitList.length;
-    listDouble = List.generate(
-        length2,
-        (index) => Item()
-          ..height = (index + 1)
-          ..color = Color.fromARGB(255, (index + 1) * 100, 0, 0)
-          ..str = data.substring(0, data.indexOf(splitList[index])));
+/// The screen that shows a list of persons in a family.
+class FamilyScreen extends StatelessWidget {
+  /// Creates a [FamilyScreen].
+  FamilyScreen({super.key}) {
+    fid = (Get.parameters.isNotEmpty && Get.parameters.containsKey('fid'))
+        ? Get.parameters['fid'] ?? ''
+        : '';
   }
 
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
-    });
-  }
+  /// The family to display.
+  late String fid;
+
+  /// Whether to sort the name in ascending order.
+  final bool asc = false;
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
+    final Map<String, String> newQueries;
+    final List<String> names =
+        _families[fid]!.people.values.map<String>((Person p) => p.name).toList();
+    names.sort();
+    if (asc) {
+      newQueries = const <String, String>{'sort': 'desc'};
+    } else {
+      newQueries = const <String, String>{'sort': 'asc'};
+    }
     return Scaffold(
       appBar: AppBar(
-          // Here we take the value from the MyHomePage object that was created by
-          // the App.build method, and use it to set our appbar title.
-          //  title: Text(widget.title),
-          ),
-      body: LayoutBuilder(builder: (context, constraints) {
-        debugPrint('constraints ${constraints.maxHeight}');
-        return Stack(
-          children: [
-            SingleChildScrollView(
-              child: Column(
-                children: [
-                  Container(
-                    width: double.infinity,
-                    height: 500,
-                    color: Colors.blue,
-                  ),
-                  Container(
-                    width: double.infinity,
-                    height: 600,
-                    color: Colors.green,
-                  ),
-                  Container(
-                    width: double.infinity,
-                    height: 700,
-                    color: Colors.orange,
-                    margin: EdgeInsets.only(bottom: doubleHeight),
-                    alignment: Alignment.bottomCenter,
-                    child: const Text(
-                      'Hi',
-                      textAlign: TextAlign.end,
-                      style: TextStyle(fontSize: 20),
-                    ),
-                  ),
-                ],
-              ),
+        title: Text(_families[fid]!.name),
+        actions: <Widget>[
+          IconButton(
+            onPressed: () => Get.toNamed(
+              '/home',
+              parameters: <String, String>{'fid': fid},
+              // queryParameters: newQueries),
             ),
-            Align(
-              alignment: Alignment.bottomCenter,
-              child: SizedBox(
-                width: MediaQuery.of(context).size.width,
-                height: doubleHeight,
-                child: PageView.builder(
-                  itemCount: splitList.length,
-                  controller: PageController(),
-                  itemBuilder: (context, index) {
-                    debugPrint('Itembuilder $index $doubleHeight');
-
-                    return Container(
-                      color: listDouble[index].color,
-                      child: SingleChildScrollView(
-                        /// Additional Builder to get context closer to Child i.e., Text
-                        /// This enables to find renderObject - Constrained Box of Container
-                        child: RepaintBoundary(
-                          key: listDouble[index].gk,
-                          child: LayoutBuilder(
-                              builder: (BuildContext context, BoxConstraints constraints) {
-                            WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-                              final RenderBox renderBox = listDouble[index]
-                                  .gk
-                                  .currentContext
-                                  ?.findRenderObject() as RenderBox;
-                              final double doubleHeightRendered = renderBox.size.height * 2;
-                              debugPrint("doubleHeightRendered $doubleHeightRendered");
-
-
-                              if (listDouble[index].height != doubleHeightRendered) {
-                                setState(() {
-                                  listDouble[index].height = doubleHeightRendered;
-                                  doubleHeight = doubleHeightRendered;
-                                  debugPrint('height ${listDouble[index].height}');
-                                });
-                              }
-                            });
-
-                            return Text(
-                              listDouble[index].str,
-                              style: const TextStyle(fontSize: 20),
-                            );
-                          }),
-                        ),
-                      ),
-                    );
-                  },
-                  onPageChanged: (index) {
-                    if (doubleHeight != listDouble[index].height) {
-                      setState(() {
-                        debugPrint("onPageChanged $index");
-                        doubleHeight = listDouble[index].height;
-                      });
-                    }
-                  },
-                ),
-              ),
+            tooltip: 'sort ascending or descending',
+            icon: const Icon(Icons.sort),
+          )
+        ],
+      ),
+      body: ListView(
+        children: <Widget>[
+          for (final String name in (asc ? names : names.reversed))
+            ListTile(
+              title: Text(name),
             ),
-          ],
-        );
-      }),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
+        ],
+      ),
     );
   }
 }
