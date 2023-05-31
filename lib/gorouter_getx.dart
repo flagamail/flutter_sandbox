@@ -95,7 +95,7 @@ class App extends StatelessWidget {
     },
 
     // changes on the listenable will cause the router to refresh it's route
-    refreshListenable: _loginInfo,
+   // refreshListenable: _loginInfo,
   );
 }
 
@@ -115,6 +115,7 @@ class LoginScreen extends StatelessWidget {
             onPressed: () {
               // log a user in, letting all the listeners know
               context.read<LoginInfo>().login('test-user');
+              context.go('/');
 
               // router will automatically redirect from /login to / using
               // refreshListenable
@@ -143,7 +144,12 @@ class HomeScreen extends StatelessWidget {
           IconButton(
             onPressed:/* info.logout*/ (){
               Overlay.of(context).insert(AppIndefiniteProgressDialog.overlayEntry);
-              2.delay(() => AppIndefiniteProgressDialog.overlayEntry.remove());
+              2.delay(() {
+                AppIndefiniteProgressDialog.overlayEntry.remove();
+                info.logout();
+                context.go('/login');
+              });
+
             },
             tooltip: 'Logout: ${info.userName}',
             icon: const Icon(Icons.logout),
