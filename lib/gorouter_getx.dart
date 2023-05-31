@@ -244,9 +244,57 @@ class ScaffoldWithNavBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: child,
+      body: Row(
+        children: [
+          Expanded(
+              child: Column(
+            children: [
+              Expanded(
+                child: InkWell(
+                  onTap: () {
+                    GoRouter.of(context).go('/a');
+                  },
+                  child: Container(
+                    color: Colors.grey,
+                    width: double.infinity,
+                    alignment: Alignment.center,
+                    child: const Text('Route A'),
+                  ),
+                ),
+              ),
+              Expanded(
+                child: InkWell(
+                  onTap: () {
+                    GoRouter.of(context).go('/b');
+                  },
+                  child: Container(
+                    color: Colors.blueGrey,
+                    width: double.infinity,
+                    alignment: Alignment.center,
+                    child: const Text('Route B'),
+                  ),
+                ),
+              ),
+              Expanded(
+                child: InkWell(
+                  onTap: () {
+                    GoRouter.of(context).go('/c');
+                  },
+                  child: Container(
+                    color: Colors.lime,
+                    width: double.infinity,
+                    alignment: Alignment.center,
+                    child: const Text('Route C'),
+                  ),
+                ),
+              ),
+            ],
+          )),
+          Expanded(flex: 3, child: child),
+        ],
+      ),
       backgroundColor: Colors.blueAccent,
-      bottomNavigationBar: BottomNavigationBar(
+      /*  bottomNavigationBar: BottomNavigationBar(
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(
             icon: Icon(Icons.home),
@@ -261,9 +309,8 @@ class ScaffoldWithNavBar extends StatelessWidget {
             label: 'C Screen',
           ),
         ],
-        currentIndex: _calculateSelectedIndex(context),
-        onTap: (int idx) => _onItemTapped(idx, context),
-      ),
+        currentIndex: _calculateSelectedIndex(context),*/
+      // onTap: (int idx) => _onItemTapped(idx, context),
     );
   }
 
