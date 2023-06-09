@@ -1,5 +1,5 @@
 import 'dart:convert' show json, base64, ascii;
-import 'dart:html' show window;
+import 'dart:html' show window, HttpRequest;
 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -35,14 +35,6 @@ class MyApp extends StatelessWidget {
             return LoginPage();
           } else {
             var payload = json.decode(ascii.decode(base64.decode(base64.normalize(token[1]))));
-            print('token[1] - ${token[1]}');
-            print('base64.normalize(token[1]) - ${base64.normalize(token[1])}');
-            print(
-                'base64.decode(base64.normalize(token[1])) - ${base64.decode(base64.normalize(token[1]))}');
-            print(
-                'ascii.decode(base64.decode(base64.normalize(token[1]))) - ${ascii.decode(base64.decode(base64.normalize(token[1])))}');
-            print(
-                'json.decode(ascii.decode(base64.decode(base64.normalize(token[1])))) - ${json.decode(ascii.decode(base64.decode(base64.normalize(token[1]))))}');
             print(
                 'DateTime.fromMillisecondsSinceEpoch(payload["exp"] * 1000) - ${DateTime.fromMillisecondsSinceEpoch(payload["exp"] * 1000)}');
             if (DateTime.fromMillisecondsSinceEpoch(payload["exp"] * 1000)
@@ -74,9 +66,18 @@ class LoginPage extends StatelessWidget {
       );
 
   Future<String?> attemptLogIn(String username, String password) async {
-    var res = await http.post(Uri(scheme: 'http', host: SERVER_IP, port: PORT, path: '/login'),
-        body: {"username": username, "password": password});
-    if (res.statusCode == 200) return res.body;
+    var body2 = {"username": "username", "password": password};
+    var req =
+        await HttpRequest.postFormData("http://localhost:3000/login", body2, withCredentials: true);
+    print(req.responseText);
+    return req.responseText;
+    /* var res = await http.post(Uri(scheme: 'http', host: SERVER_IP, port: PORT, path: '/login'),
+        body: body2);
+    if (res.statusCode == 200) {
+      print('res ${res.headers}');
+      print('res ${res}');
+      return res.body;
+    }*/
     return null;
   }
 
@@ -168,17 +169,27 @@ class HomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-        appBar: AppBar(title: const Text("Secret Data Screen")),
+        appBar: AppBar(title: const Text("Secret Data Screen"), actions: [
+          IconButton(
+              onPressed: () {
+                window.localStorage.remove("csrf");
+              },
+              icon: const Icon(Icons.logout))
+        ]),
         body: Center(
           child: FutureBuilder(
-              future: http.read(Uri(scheme: 'http', host: SERVER_IP, path: '/data'),
+              future: HttpRequest.request("http://localhost:3000/data",
+                  method: "GET", withCredentials: true),
+/*
+              future: http.read(Uri(scheme: 'http', host: SERVER_IP, port: PORT, path: '/data'),
                   headers: {"CSRF": jwt}),
+*/
               builder: (context, snapshot) {
                 return snapshot.hasData
                     ? Column(
                         children: <Widget>[
                           Text("${payload['username']}, here's the data:"),
-                          Text(snapshot.data ?? '',
+                          Text(/*snapshot.data ?? */ '',
                               style: Theme.of(context).textTheme.headlineMedium)
                         ],
                       )
