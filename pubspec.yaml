@@ -42,6 +42,7 @@ dependencies:
   english_words: any
   provider: any
 
+  http: any
 
   shelf: any
   shelf_router: any
