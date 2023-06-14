@@ -2,6 +2,7 @@ import 'dart:convert' show json, base64, ascii;
 import 'dart:html' show window, HttpRequest;
 
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 
 const SERVER_IP = 'localhost';
@@ -67,18 +68,16 @@ class LoginPage extends StatelessWidget {
 
   Future<String?> attemptLogIn(String username, String password) async {
     var body2 = {"username": "username", "password": password};
-    var req =
-        await HttpRequest.postFormData("http://localhost:3000/login", body2, withCredentials: true);
-    print(req.responseText);
-    return req.responseText;
-    /* var res = await http.post(Uri(scheme: 'http', host: SERVER_IP, port: PORT, path: '/login'),
-        body: body2);
-    if (res.statusCode == 200) {
-      print('res ${res.headers}');
-      print('res ${res}');
+
+    try {
+      Response res = await GetConnect(withCredentials: true)
+          .post("http://localhost:3000/login", body2, contentType: "application/json");
+      print('res.body ${res.body}');
       return res.body;
-    }*/
-    return null;
+    } catch (e) {
+      print('error GetConnect $e');
+      return "Failed login";
+    }
   }
 
   Future<int> attemptSignUp(String username, String password) async {
