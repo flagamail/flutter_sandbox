@@ -3,7 +3,6 @@ import 'dart:html' show window, HttpRequest;
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:http/http.dart' as http;
 
 const SERVER_IP = 'localhost';
 const PORT = 3000;
@@ -67,7 +66,7 @@ class LoginPage extends StatelessWidget {
       );
 
   Future<String?> attemptLogIn(String username, String password) async {
-    var body2 = {"username": "username", "password": password};
+    var body2 = {"username": username, "password": password};
 
     try {
       Response res = await GetConnect(withCredentials: true)
@@ -81,9 +80,15 @@ class LoginPage extends StatelessWidget {
   }
 
   Future<int> attemptSignUp(String username, String password) async {
-    var res = await http.post(Uri(scheme: 'http', host: SERVER_IP, port: PORT, path: '/signup'),
+    Response res = await GetConnect(withCredentials: true).post(
+        "http://localhost:3000/signup", {"username": username, "password": password},
+        contentType: "application/json");
+    print('res.body ${res.body}');
+    return res.statusCode ?? 404;
+
+    /* var res = await http.post(Uri(scheme: 'http', host: SERVER_IP, port: PORT, path: '/signup'),
         body: {"username": username, "password": password});
-    return res.statusCode;
+    return res.statusCode;*/
   }
 
   @override
