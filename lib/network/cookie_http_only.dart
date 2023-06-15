@@ -1,18 +1,22 @@
 import 'dart:convert' show json, base64, ascii;
-import 'dart:html' show window, HttpRequest;
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:get_storage/get_storage.dart';
 
 const SERVER_IP = 'localhost';
 const PORT = 3000;
 
-void main() {
+void main() async {
+  GetStorage.init();
+
   runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  MyApp();
+  final storage = GetStorage();
+
+  MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -22,8 +26,7 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.blue,
       ),
       home: Builder(builder: (context) {
-        var csrfTokenOrEmpty =
-            window.localStorage.containsKey("csrf") ? window.localStorage["csrf"] : "";
+        var csrfTokenOrEmpty = storage.read("csrf");
         if (csrfTokenOrEmpty != null && csrfTokenOrEmpty != "") {
           String str = csrfTokenOrEmpty;
           print('csrfTokenOrEmpty - $csrfTokenOrEmpty');
@@ -31,7 +34,7 @@ class MyApp extends StatelessWidget {
           print('token - $token');
 
           if (token.length != 3) {
-            window.localStorage.remove("csrf");
+            storage.remove("csrf");
             return LoginPage();
           } else {
             var payload = json.decode(ascii.decode(base64.decode(base64.normalize(token[1]))));
@@ -116,7 +119,7 @@ class LoginPage extends StatelessWidget {
                     var password = _passwordController.text;
                     var jwt = await attemptLogIn(username, password);
                     if (jwt != null && context.mounted) {
-                      window.localStorage["csrf"] = jwt;
+                      GetStorage().write("csrf", jwt);
                       Navigator.pushReplacement(context,
                           MaterialPageRoute(builder: (context) => HomePage.fromBase64(jwt)));
                     } else {
@@ -176,7 +179,7 @@ class HomePage extends StatelessWidget {
         appBar: AppBar(title: const Text("Secret Data Screen"), actions: [
           IconButton(
               onPressed: () async {
-                window.localStorage.remove("csrf");
+                GetStorage().remove("csrf");
                 Response res = await GetConnect(withCredentials: true).get(
                     "http://localhost:3000/logout",
                     contentType: "application/json",
