@@ -182,8 +182,10 @@ class HomePage extends StatelessWidget {
         ]),
         body: Center(
           child: FutureBuilder(
-              future: HttpRequest.request("http://localhost:3000/data",
-                  method: "GET", withCredentials: true),
+              /* future: HttpRequest.request("http://localhost:3000/data",
+                  method: "GET", withCredentials: true),*/
+              future: GetConnect(withCredentials: true).get("http://localhost:3000/data",
+                  contentType: "application/json", headers: {"CSRF": jwt}),
 /*
               future: http.read(Uri(scheme: 'http', host: SERVER_IP, port: PORT, path: '/data'),
                   headers: {"CSRF": jwt}),
