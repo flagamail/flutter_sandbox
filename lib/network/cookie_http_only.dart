@@ -117,7 +117,7 @@ class LoginPage extends StatelessWidget {
                     var jwt = await attemptLogIn(username, password);
                     if (jwt != null && context.mounted) {
                       window.localStorage["csrf"] = jwt;
-                      Navigator.push(context,
+                      Navigator.pushReplacement(context,
                           MaterialPageRoute(builder: (context) => HomePage.fromBase64(jwt)));
                     } else {
                       displayDialog(context, "An Error Occurred",
@@ -175,8 +175,16 @@ class HomePage extends StatelessWidget {
   Widget build(BuildContext context) => Scaffold(
         appBar: AppBar(title: const Text("Secret Data Screen"), actions: [
           IconButton(
-              onPressed: () {
+              onPressed: () async {
                 window.localStorage.remove("csrf");
+                Response res = await GetConnect(withCredentials: true).get(
+                    "http://localhost:3000/logout",
+                    contentType: "application/json",
+                    headers: {"CSRF": jwt});
+                if (res.statusCode == 200) {
+                  Navigator.pushReplacement(
+                      context, MaterialPageRoute(builder: (context) => LoginPage()));
+                }
               },
               icon: const Icon(Icons.logout))
         ]),
