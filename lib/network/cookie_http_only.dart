@@ -41,12 +41,12 @@ class MyApp extends StatelessWidget {
                 .isAfter(DateTime.now())) {
               return HomePage(str, payload);
             } else {
-              window.localStorage.remove("csrf");
+              //   window.localStorage.remove("csrf");
               return LoginPage();
             }
           }
         } else {
-          window.localStorage.remove("csrf");
+          //   window.localStorage.remove("csrf");
           return LoginPage();
         }
       }),
@@ -181,22 +181,17 @@ class HomePage extends StatelessWidget {
               icon: const Icon(Icons.logout))
         ]),
         body: Center(
-          child: FutureBuilder(
-              /* future: HttpRequest.request("http://localhost:3000/data",
-                  method: "GET", withCredentials: true),*/
+          child: FutureBuilder<Response<dynamic>>(
               future: GetConnect(withCredentials: true).get("http://localhost:3000/data",
                   contentType: "application/json", headers: {"CSRF": jwt}),
-/*
-              future: http.read(Uri(scheme: 'http', host: SERVER_IP, port: PORT, path: '/data'),
-                  headers: {"CSRF": jwt}),
-*/
-              builder: (context, snapshot) {
+              builder: (BuildContext context, snapshot) {
                 return snapshot.hasData
                     ? Column(
                         children: <Widget>[
                           Text("${payload['username']}, here's the data:"),
-                          Text(/*snapshot.data ?? */ '',
-                              style: Theme.of(context).textTheme.headlineMedium)
+                          Text(
+                            snapshot.data?.body ?? '',
+                          )
                         ],
                       )
                     : snapshot.hasError
