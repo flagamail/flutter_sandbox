@@ -6,8 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 
-
-void main() async{
+void main() async {
   await GetStorage.init();
   Get.put(LoginInfo());
   runApp(App());
@@ -20,7 +19,9 @@ class AuthMiddleware extends GetMiddleware {
 
     return (route == '/login')
         ? null
-        : Get.find<LoginInfo>().loggedIn ? null : const RouteSettings(name: '/login');
+        : Get.find<LoginInfo>().loggedIn
+            ? null
+            : const RouteSettings(name: '/login');
   }
 }
 
@@ -28,9 +29,7 @@ class LoginMiddleware extends GetMiddleware {
   @override
   RouteSettings? redirect(String? route) {
     print("LoginMiddleware REDIRECT route $route");
-    return Get.find<LoginInfo>().loggedIn
-            ? const RouteSettings(name: '/home')
-            : null;
+    return Get.find<LoginInfo>().loggedIn ? const RouteSettings(name: '/home') : null;
   }
 }
 
@@ -81,25 +80,36 @@ class LoginScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-        appBar: AppBar(title: const Text(App.title)),
-        body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: <Widget>[
-              ElevatedButton(
-                onPressed: () {
-                  // log a user in, letting all the listeners know
-                  Get.find<LoginInfo>().login('test-user');
-
-                  Get.offAllNamed('/home', predicate: (_) => false);
-                  // router will automatically redirect from /login to / using
-                  // refreshListenable
-                },
-                child: const Text('Login'),
+    appBar: AppBar(title: const Text(App.title)),
+        body: Column(children: [
+          Row(),
+          Container(height: 100, color: Colors.blue),
+          Expanded(
+            child: SingleChildScrollView(
+              child: Column(
+                children: [
+                  GridView.builder(
+                      itemCount: 30,
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                          maxCrossAxisExtent: 200,
+                          childAspectRatio: 3 / 2,
+                          crossAxisSpacing: 20,
+                          mainAxisSpacing: 20),
+                      itemBuilder: (index, context) {
+                        return Container(
+                            width: 150,
+                            height: 150,
+                            color: Colors.amber,
+                            margin: const EdgeInsets.all(8));
+                      }),
+                  Container(height: 100, color: Colors.deepOrange),
+                ],
               ),
-            ],
+            ),
           ),
-        ),
+        ]),
       );
 }
 
@@ -188,7 +198,6 @@ class FamilyScreen extends StatelessWidget {
     );
   }
 }
-
 
 /// Family data class.
 class Family {

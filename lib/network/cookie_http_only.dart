@@ -9,7 +9,7 @@ const PORT = 3000;
 
 void main() async {
   GetStorage.init();
-
+  print('main');
   runApp(MyApp());
 }
 
@@ -132,7 +132,7 @@ class LoginPage extends StatelessWidget {
                   onPressed: () async {
                     var username = _usernameController.text;
                     var password = _passwordController.text;
-
+                    print('username $username password $password');
                     if (context.mounted) {
                       if (username.length < 4) {
                         displayDialog(context, "Invalid Username",
